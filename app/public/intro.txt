@@ -1,0 +1,25 @@
+ROLES DES LANGAGES :
+--------------------
+
+FRONTEND (exécuté par le navigateur)
+--------
+- HTML : Structure d'une page web (régions, haut du site, médias ...)
+- CSS  : Mise en forme d'une page web (couleurs, tailles, bordures, marges ...)
+- JS   : Javascript : intéractivité, animations (sliders, controles formulaire, jeux ...)
+
+BACKEND (exécuté côté serveur) 
+-------
+- PHP  : (Java, Python, .NET, ...) Fonctionnalités d'un site. (Formulaires, sécurité, template)
+- SQL  : MySQL (PostgresSQL, SQLserveur, NoSQL ...) Communication avec les Bases de données (Récupération, Enregistrement, Modification, Suppression)
+
+
+Serveur local :
+---------------
+- WAMP, MAMP, XAMPP, LAMP 
+W   indows                  M   ac      L   inux
+A   pache (serveur web)
+M   ySQL
+P   hp
+
+XAMPP : windows, mac, linux  
+
