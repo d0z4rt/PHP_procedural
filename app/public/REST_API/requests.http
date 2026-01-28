@@ -1,0 +1,28 @@
+GET http://localhost/REST_API/api.php HTTP/1.1
+
+###
+
+POST http://localhost/REST_API/api.php HTTP/1.1
+content-type: application/json
+
+{
+  "nom": "test",
+  "prenom": "test",
+  "age": 23,
+  "sexe": "F",
+  "service_id": 2,
+  "salaire": 2000
+}
+
+###
+
+DELETE  http://localhost/REST_API/api.php?id=2 HTTP/1.1
+
+###
+
+PUT  http://localhost/REST_API/api.php?id=1 HTTP/1.1
+content-type: application/json
+
+{
+  "salaire": 2000
+}
