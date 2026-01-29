@@ -1,9 +1,29 @@
-GET http://localhost/REST_API/api.php HTTP/1.1
+
+### Authentification
+POST http://localhost/REST_API/api.php?action=login HTTP/1.1
+content-type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
 
 ###
 
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNzY5NjgzMzMzLCJleHAiOjE3Njk3Njk3MzN9.nzyxdeE8x4DeA7nV9SfqOyjaSQXJdNV2-rwVML0U4Qc
+
+### Récupérer les services
+GET http://localhost/REST_API/api.php?action=services HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Récupérer tous les individus
+GET http://localhost/REST_API/api.php HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Créer un nouvel individu
 POST http://localhost/REST_API/api.php HTTP/1.1
 content-type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nom": "test",
@@ -14,14 +34,14 @@ content-type: application/json
   "salaire": 2000
 }
 
-###
+### Supprimer un individu (admin seulement)
+DELETE http://localhost/REST_API/api.php?id=1 HTTP/1.1
+Authorization: Bearer {{token}}
 
-DELETE  http://localhost/REST_API/api.php?id=2 HTTP/1.1
-
-###
-
-PUT  http://localhost/REST_API/api.php?id=1 HTTP/1.1
+### Mettre à jour le salaire
+PUT http://localhost/REST_API/api.php?id=1 HTTP/1.1
 content-type: application/json
+Authorization: Bearer {{token}}
 
 {
   "salaire": 2000

@@ -1,8 +1,12 @@
 <?php
+// Démarrage de la session pour stocker le token JWT
+session_start();
+
 // Configuration
 $api_url = 'http://web/REST_API/api.php';
+$api_auth_url = 'http://web/REST_API/api.php?action=login';
 
-// Fonction pour appeler l'API
+// Fonction pour appeler l'API avec authentification
 function callAPI($method, $url, $data = null, $id = null)
 {
   $curl = curl_init();
@@ -12,13 +16,17 @@ function callAPI($method, $url, $data = null, $id = null)
     $url .= '?id=' . $id;
   }
 
+  // Récupérer le token JWT de la session
+  $token = $_SESSION['jwt_token'] ?? '';
+
   $options = [
     CURLOPT_URL => $url,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT => 30,
     CURLOPT_HTTPHEADER => [
       'Content-Type: application/json',
-      'Accept: application/json'
+      'Accept: application/json',
+      'Authorization: Bearer ' . $token
     ],
     CURLOPT_CUSTOMREQUEST => $method
   ];
@@ -48,6 +56,261 @@ function callAPI($method, $url, $data = null, $id = null)
     'message' => is_array($result) && isset($result['message']) ? $result['message'] : ''
   ];
 }
+
+// Fonction pour se connecter à l'API
+function loginToAPI($username, $password)
+{
+  global $api_auth_url;
+
+  $curl = curl_init();
+
+  $data = [
+    'username' => $username,
+    'password' => $password
+  ];
+
+  $options = [
+    CURLOPT_URL => $api_auth_url,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_HTTPHEADER => [
+      'Content-Type: application/json',
+      'Accept: application/json'
+    ],
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($data)
+  ];
+
+  curl_setopt_array($curl, $options);
+
+  $response = curl_exec($curl);
+  $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+  unset($curl);
+
+  $result = json_decode($response, true);
+
+  if ($http_code === 200 && isset($result['token'])) {
+    return [
+      'success' => true,
+      'token' => $result['token'],
+      'user' => $result['user'] ?? []
+    ];
+  }
+
+  return [
+    'success' => false,
+    'message' => $result['message'] ?? 'Erreur de connexion'
+  ];
+}
+
+// Vérifier si l'utilisateur est connecté
+function isLoggedIn()
+{
+  return isset($_SESSION['jwt_token']) && !empty($_SESSION['jwt_token']);
+}
+
+// Déconnexion
+if (isset($_GET['logout'])) {
+  session_destroy();
+  header('Location: ?');
+  exit();
+}
+
+// Traitement du formulaire de connexion
+$login_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
+  $username = $_POST['username'] ?? '';
+  $password = $_POST['password'] ?? '';
+
+  $login_result = loginToAPI($username, $password);
+
+  if ($login_result['success']) {
+    $_SESSION['jwt_token'] = $login_result['token'];
+    $_SESSION['user_info'] = $login_result['user'];
+    header('Location: ?');
+    exit();
+  } else {
+    $login_error = $login_result['message'];
+  }
+}
+
+// Si l'utilisateur n'est pas connecté, afficher la page de connexion
+if (!isLoggedIn()): ?>
+  <!DOCTYPE html>
+  <html lang="fr">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Dashboard Gestion des Individus</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #f1f5f9;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .login-container {
+        background: rgba(30, 41, 59, 0.9);
+        padding: 40px;
+        border-radius: 12px;
+        border: 1px solid #475569;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .login-header h1 {
+        color: #3b82f6;
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+
+      .login-header p {
+        color: #94a3b8;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background: #2d3748;
+        border: 2px solid #475569;
+        border-radius: 8px;
+        color: #f1f5f9;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: #374151;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+      }
+
+      .btn:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        transform: translateY(-2px);
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        color: #fca5a5;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #ef4444;
+      }
+
+      .credentials-info {
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 0.9em;
+        color: #94a3b8;
+      }
+
+      .credentials-info h4 {
+        color: #3b82f6;
+        margin-bottom: 10px;
+      }
+
+      .credentials-info ul {
+        padding-left: 20px;
+      }
+
+      .credentials-info li {
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="login-container">
+      <div class="login-header">
+        <h1>🔐 Connexion</h1>
+        <p>Dashboard Gestion des Individus</p>
+      </div>
+
+      <?php if ($login_error): ?>
+        <div class="error-message">
+          ❌ <?php echo htmlspecialchars($login_error); ?>
+        </div>
+      <?php endif; ?>
+
+      <form method="POST" action="">
+        <input type="hidden" name="action" value="login">
+
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn">Se connecter</button>
+      </form>
+
+      <div class="credentials-info">
+        <h4>Identifiants de test :</h4>
+        <ul>
+          <li><strong>Admin:</strong> admin / admin123</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+
+  </html>
+<?php
+  exit();
+endif;
+
+// L'utilisateur est connecté, continuer avec le dashboard
+$user_info = $_SESSION['user_info'] ?? ['username' => 'Utilisateur', 'role' => 'user'];
 
 // Traitement des actions
 $message = '';
@@ -142,6 +405,13 @@ if (!$result['error'] && is_array($result['data'])) {
   }
 }
 
+// Vérifier si le token a expiré lors de la requête GET
+if ($result['code'] === 401) {
+  session_destroy();
+  header('Location: ?');
+  exit();
+}
+
 // Services disponibles
 $services = [
   1 => 'Informatique',
@@ -196,6 +466,9 @@ $services = [
     }
 
     .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       background: var(--bg-card);
       padding: 10px;
       border-radius: 12px;
@@ -215,6 +488,41 @@ $services = [
     .header p {
       color: var(--text-secondary);
       font-size: 1.2em;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .user-role {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+    }
+
+    .logout-btn {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 8px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .logout-btn:hover {
+      background: linear-gradient(135deg, #b91c1c, #991b1b);
+      transform: translateY(-2px);
     }
 
     .main-content {
@@ -615,6 +923,15 @@ $services = [
     <!-- Header -->
     <div class="header">
       <h1>📊 Dashboard Gestion des Individus</h1>
+      <div class="user-info">
+        <div class="user-name"><?php echo htmlspecialchars($user_info['username'] ?? 'Utilisateur'); ?></div>
+        <div class="user-role">
+          <span class="badge <?php echo ($user_info['role'] ?? 'user') === 'admin' ? 'badge-admin' : 'badge-user'; ?>">
+            <?php echo ($user_info['role'] ?? 'user') === 'admin' ? 'Administrateur' : 'Utilisateur'; ?>
+          </span>
+        </div>
+        <a href="?logout=1" class="logout-btn">Se déconnecter</a>
+      </div>
     </div>
 
     <!-- Messages d'alerte -->
