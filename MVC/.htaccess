@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Ne rien faire si on est déjà dans /public
+RewriteRule ^public/ - [L]
+
+# Tout le reste est redirigé vers /public
+RewriteRule ^(.*)$ public/$1 [L]

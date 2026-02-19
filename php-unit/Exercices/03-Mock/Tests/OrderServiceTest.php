@@ -31,7 +31,7 @@ class OrderServiceTest extends TestCase
 
         $payment->expects(($this->once()))
             ->method("charge")
-            ->with(19999 )
+            ->with($order->amount)
             ->willReturn(['status' => 'success']);
 
         
@@ -46,5 +46,32 @@ class OrderServiceTest extends TestCase
 
 
 
+    }
+
+    public function testPlaceOrderFailsWhenPaymentFails(){
+        $email = "user@user.fr";
+        $logger = $this->createMock(Logger::class);
+        $mailer = $this->createMock(Mailer::class);
+        $payment = $this->createMock(Paymentgateway::class);
+        $order = new Order(101, 19999);
+
+        $payment->expects(($this->once()))
+            ->method("charge")
+            ->with($order->amount)
+            ->willReturn(['status' => 'failed']);
+
+        $mailer->expects($this->never())
+            ->method('send');
+
+        $logger->expects($this->once())
+            ->method("log")
+            ->with($this->stringContains("status failed"));
+        
+        $orderService = new OrderService($logger, $mailer, $payment);
+        $result = $orderService->placeOrder($order, $email);
+        
+        
+        $this->assertSame("failed", $result["payment"]["status"]);
+        $this->assertSame($order->id, $result["id"]);
     }
 }
