@@ -1,0 +1,1 @@
+{"version":2,"defects":[],"times":{"Tests\\BankTest::testDepositeValidAmount":0,"Tests\\BankTest::testWithdrawTooMuchThrowsException":0,"Tests\\BankTest::testCannotCreateWithInvalidAmount":0,"Tests\\BankTest::testDepotZero":0,"Tests\\BankTest::testEgalite":0,"Test\\EmailTest::testCanBeCreateByValidString":0.001,"Test\\EmailTest::testCantBeCreateByInvalidString":0}}
