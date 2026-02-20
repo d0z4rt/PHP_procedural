@@ -7,7 +7,7 @@ class FakeController {
     public function index() {
         return "index method";
     }
-    
+
     public function show() {
         return "show method";
     }

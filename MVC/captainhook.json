@@ -1,0 +1,28 @@
+{
+    "config": {
+        "run": {
+            "mode": "docker",
+            "exec": "docker exec -i php_procedural-php-1",
+            "git": "/var/www/html/.git"
+        }
+    },
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "vendor/bin/php-cs-fixer fix src --rules=@PSR12 --diff"
+            },
+            {
+                "action": "git add ."
+            }
+        ]
+    },
+    "pre-push": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "bash -c 'vendor/bin/phpstan analyse src || { echo \"Erreur détectée ! Push annulé !\"; exit 1; }'"
+            }
+        ]
+    }
+}
